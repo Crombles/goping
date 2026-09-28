@@ -24,6 +24,12 @@ func readInput(scanner *bufio.Scanner) string {
 }
 
 func printResults(results []ServerResult) {
+	if len(results) == 0 {
+		fmt.Println("[!] No valid configs found to check.")
+		fmt.Println("__________________________________________________________")
+		return
+	}
+
 	sort.Slice(results, func(i, j int) bool {
 		if results[i].IsAlive != results[j].IsAlive {
 			return results[i].IsAlive
@@ -31,13 +37,18 @@ func printResults(results []ServerResult) {
 		return results[i].Latency < results[j].Latency
 	})
 
+	var deadCount int
+
 	for _, res := range results {
 		if res.IsAlive {
 			fmt.Printf("[+] Server: %s | Status: ALIVE | Latency: %v\n", res.Name, res.Latency)
 		} else {
 			fmt.Printf("[-] Server: %s | Status: DEAD\n", res.Name)
+			deadCount++
 		}
 	}
+
+	fmt.Printf("\n[i] Total configs: %d | Dead: %d | Alive: %d", len(results), deadCount, len(results)-deadCount)
 	fmt.Println("__________________________________________________________")
 }
 
@@ -63,9 +74,9 @@ func main() {
 			input := readInput(scanner)
 			inputLines := strings.Fields(input)
 
-			var configs []string
-
 			for _, item := range inputLines {
+				var configs []string
+
 				if strings.HasPrefix(item, "http://") || strings.HasPrefix(item, "https://") {
 					fetched, err := fetchSubscription(item)
 					if err != nil {
@@ -74,43 +85,17 @@ func main() {
 					}
 
 					for _, cfg := range fetched {
-						cfgClean := strings.TrimSpace(cfg)
-						if cfgClean != "" {
+						if cfgClean := strings.TrimSpace(cfg); cfgClean != "" {
 							configs = append(configs, cfgClean)
 						}
 					}
 				} else {
 					configs = append(configs, item)
 				}
-			}
 
-			if len(configs) == 0 {
-				fmt.Println("[!] No valid configs found to check.")
-				fmt.Println("\n__________________________________________________________")
-				continue
-			}
-
-			results := processParallel(configs, 10)
-
-			hasAlive := false
-			for _, res := range results {
-				if res.IsAlive {
-					hasAlive = true
-					break
-				}
-			}
-
-			if hasAlive {
-				printResults(results)
-			} else {
-				fmt.Println("[!] Subscription checked.")
-				fmt.Print("No active servers found. Do you still want to view the dead servers? [1] - Yes, [2] - No: ")
-
-				if scanner.Scan() {
-					viewDeadSub := strings.TrimSpace(scanner.Text())
-					if viewDeadSub == "1" {
-						printResults(results)
-					}
+				if len(configs) > 0 {
+					results := processParallel(configs, 10)
+					printResults(results)
 				}
 			}
 
