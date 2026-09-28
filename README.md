@@ -1,4 +1,4 @@
-#  Fuster — Fast Server & Protocol Availability Checker
+# Fast Server & Protocol Availability Checker
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
