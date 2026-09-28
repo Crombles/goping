@@ -34,7 +34,7 @@ func processParallel(configs []string, workerCount int) []ServerResult {
 	wg.Wait()
 	close(results)
 
-	var finalResults []ServerResult
+	finalResults := make([]ServerResult, 0, len(configs))
 	for res := range results {
 		finalResults = append(finalResults, res)
 	}
@@ -92,7 +92,7 @@ func checkServer(rawCfg string) (ServerResult, error) {
 	result.Address = address
 	start := time.Now()
 
-	conn, err := net.DialTimeout("tcp", address, 10*time.Second)
+	conn, err := net.DialTimeout("tcp", address, 6*time.Second)
 	if err != nil {
 		result.IsAlive = false
 		return result, err
@@ -100,7 +100,7 @@ func checkServer(rawCfg string) (ServerResult, error) {
 
 	defer conn.Close()
 
-	_ = conn.SetDeadline(time.Now().Add(1500 * time.Millisecond))
+	_ = conn.SetDeadline(time.Now().Add(5000 * time.Millisecond))
 
 	PingPayload := []byte{0x05, 0x01, 0x00}
 	_, err = conn.Write(PingPayload)
@@ -116,7 +116,7 @@ func checkServer(rawCfg string) (ServerResult, error) {
 		return result, fmt.Errorf("server is silent (no response): %w", err)
 	}
 
-	result.Latency = time.Since(start)
+	result.Latency = time.Since(start).Round(time.Millisecond)
 	result.IsAlive = true
 	return result, nil
 }
