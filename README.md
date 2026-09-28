@@ -45,25 +45,17 @@ Most popular clients and desktop tools suffer from the same issues:
 
 ——-
 
-##  Quick Start
+## Quick Start
 
-### 1. Clone the repository
+### Option 1: Run directly
 ```bash
-git clone https://github.com/Crombles/goping.git goping
+git clone https://github.com/Crombles/goping.git
 cd goping
-```
-
-### 2. Run directly
-```bash
 go run .
 ```
 
-### 3. Build executable
+### optoin 2: Build binary
 ```bash
 go build -o goping .
-```
-
-### 4. Run executable
-```bash
 ./goping
 ```
