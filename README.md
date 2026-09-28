@@ -54,7 +54,7 @@ cd goping
 go run .
 ```
 
-### optoin 2: Build binary
+### Optoin 2: Build binary
 ```bash
 go build -o goping .
 ./goping
