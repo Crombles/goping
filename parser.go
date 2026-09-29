@@ -1,7 +1,8 @@
-package main
+ppackage main
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -21,27 +22,39 @@ func fetchSubscription(link string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	var rawData string
 
-	decoded, err := decodeBase64(strings.TrimSpace(string(body)))
+	decodedBytes, err := decodeBase64(strings.TrimSpace(string(body)))
 	if err != nil {
-		decoded = string(body)
+		rawData = string(body)
+	} else {
+		rawData = string(decodedBytes)
 	}
 
-	lines := strings.Split(strings.ReplaceAll(decoded, "\r\n", "\n"), "\n")
+	lines := strings.Split(strings.ReplaceAll(rawData, "\r\n", "\n"), "\n")
 	return lines, nil
 }
 
-func decodeBase64(input string) (string, error) {
-	decStd := base64.StdEncoding.WithPadding(base64.NoPadding)
+func decodeBase64(input string) ([]byte, error) {
+	cleaned := strings.TrimSpace(input)
 
-	data, err := decStd.DecodeString(input)
-	if err != nil {
-		decUrl := base64.URLEncoding.WithPadding(base64.NoPadding)
+	if cleaned == "" {
+		return nil, fmt.Errorf("empty base64 string")
+	}
 
-		data, err = decUrl.DecodeString(input)
-		if err != nil {
-			return "", err
+	decoders := []*base64.Encoding{
+		base64.URLEncoding,
+		base64.RawURLEncoding,
+		base64.StdEncoding,
+		base64.RawStdEncoding,
+	}
+
+	for _, dec := range decoders {
+		if data, err := dec.DecodeString(cleaned); err == nil {
+			return data, nil
 		}
 	}
-	return string(data), nil
+
+	return nil, fmt.Errorf("failed to decode base64: invalid format or corrupted data")
 }
