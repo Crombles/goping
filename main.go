@@ -15,7 +15,7 @@ func readInput(scanner *bufio.Scanner) string {
 		line := strings.TrimSpace(scanner.Text())
 
 		if line == "" {
-			break
+			continue
 		}
 
 		lines = append(lines, line)
