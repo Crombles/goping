@@ -83,20 +83,12 @@ func main() {
 						fmt.Println("[!] Failed to fetch subscription data:", err)
 						continue
 					}
-
-					for _, cfg := range fetched {
-						if cfgClean := strings.TrimSpace(cfg); cfgClean != "" {
-							configs = append(configs, cfgClean)
-						}
-					}
+					configs = fetched			
 				} else {
 					configs = append(configs, item)
 				}
-
-				if len(configs) > 0 {
-					results := processParallel(configs, 10)
-					printResults(results)
-				}
+				results := processParallel(configs, 10)
+				printResults(results)
 			}
 
 		case "1":
