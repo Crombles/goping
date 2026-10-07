@@ -46,23 +46,23 @@ func worker(jobs <-chan string, results chan<- ServerResult, wg *sync.WaitGroup)
 	defer wg.Done()
 
 	for link := range jobs {
-		res, _ := checkServer(link)
-		results <- res
+		serverCheckResult := checkServer(link)
+		results <- serverCheckResult
 	}
 }
 
-func checkServer(rawCfg string) (ServerResult, error) {
+func checkServer(rawCfg string) ServerResult {
 	result := ServerResult{Name: "Unknown"}
 
 	parsed, err := url.Parse(rawCfg)
 	if err != nil {
 		result.Name = "Invalid URI"
-		return result, fmt.Errorf("invalid link: %w", err)
+		return result
 	}
 
 	name, unescapeErr := url.QueryUnescape(parsed.Fragment)
 	if unescapeErr != nil || name == "" {
-		result.Name = "Unknown server name"
+		result.Name = "Unknown server name" 
 	} else {
 		result.Name = name
 	}
@@ -71,7 +71,8 @@ func checkServer(rawCfg string) (ServerResult, error) {
 	port := parsed.Port()
 
 	if host == "" {
-		return result, fmt.Errorf("%s server error: host/IP not found", result.Name)
+		result.IsAlive = false
+		return result
 	}
 
 	if port == "" {
@@ -81,7 +82,7 @@ func checkServer(rawCfg string) (ServerResult, error) {
 
 		case "ss", "vmess", "shadowsocks":
 			result.Name = fmt.Sprintf("Error: port is not specified for protocol %s", parsed.Scheme)
-			return result, fmt.Errorf("protocol %s does not specify a port", parsed.Scheme)
+			return result
 
 		default:
 			port = "80"
@@ -92,31 +93,31 @@ func checkServer(rawCfg string) (ServerResult, error) {
 	result.Address = address
 	start := time.Now()
 
-	conn, err := net.DialTimeout("tcp", address, 6*time.Second)
+	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
 	if err != nil {
 		result.IsAlive = false
-		return result, err
+		return result
 	}
 
 	defer conn.Close()
 
-	_ = conn.SetDeadline(time.Now().Add(5000 * time.Millisecond))
+	_ = conn.SetDeadline(time.Now().Add(3000 * time.Millisecond))
 
 	PingPayload := []byte{0x05, 0x01, 0x00}
 	_, err = conn.Write(PingPayload)
 	if err != nil {
 		result.IsAlive = false
-		return result, fmt.Errorf("server did not accept data: %w", err)
+		return result
 	}
 
 	buf := make([]byte, 64)
 	n, err := conn.Read(buf)
 	if err != nil || n == 0 {
 		result.IsAlive = false
-		return result, fmt.Errorf("server is silent (no response): %w", err)
+		return result
 	}
 
 	result.Latency = time.Since(start).Round(time.Millisecond)
 	result.IsAlive = true
-	return result, nil
+	return result
 }
