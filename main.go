@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func readInput(scanner *bufio.Scanner) string {
+func readInput(scanner *bufio.Scanner) []string {
 	var lines []string
 
 	for scanner.Scan() {
@@ -23,13 +23,13 @@ func readInput(scanner *bufio.Scanner) string {
 
 	if len(lines) == 0 {
 		fmt.Println("[!] Error: Why are you giving me an empty input? Provide valid configs.")
-		return ""
+		return nil
 	}
 
-	return strings.Join(lines, "\n")
+	return lines
 }
 
-func printResults(results []ServerResult) {
+func printResults(results []ServerResult, isSubscription bool) {
 	if len(results) == 0 {
 		fmt.Println("[!] No valid configs found to check.")
 		fmt.Println("__________________________________________________________")
@@ -54,8 +54,11 @@ func printResults(results []ServerResult) {
 		}
 	}
 	
+	if isSubscription {
+		fmt.Printf("\n[i] Total configs: %d | Dead: %d | Alive: %d\n", len(results), deadCount, len(results)-deadCount)
+	}
+
 	fmt.Println("__________________________________________________________")
-	fmt.Printf("\n[i] Total configs: %d | Dead: %d | Alive: %d", len(results), deadCount, len(results)-deadCount)
 }
 
 func main() {
@@ -77,24 +80,30 @@ func main() {
 		case "2":
 			fmt.Print("Paste your config/subscription and press Enter twice: ")
 
-			input := readInput(scanner)
-			inputLines := strings.Fields(input)
+			inputLines := readInput(scanner)
+			if inputLines == nil {
+				continue
+			}
 
 			for _, item := range inputLines {
 				var configs []string
+				isSubscription := false
 
 				if strings.HasPrefix(item, "http://") || strings.HasPrefix(item, "https://") {
+					isSubscription = true
 					fetched, err := fetchSubscription(item)
 					if err != nil {
 						fmt.Println("[!] Failed to fetch subscription data:", err)
+						fmt.Println("__________________________________________________________")
 						continue
 					}
 					configs = fetched         
 				} else {
 					configs = append(configs, item)
 				}
+
 				results := processParallel(configs, 10)
-				printResults(results)
+				printResults(results, isSubscription)
 			}
 
 		case "1":
