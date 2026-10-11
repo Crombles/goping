@@ -53,9 +53,9 @@ func printResults(results []ServerResult) {
 			deadCount++
 		}
 	}
-
-	fmt.Printf("\n[i] Total configs: %d | Dead: %d | Alive: %d", len(results), deadCount, len(results)-deadCount)
+	
 	fmt.Println("__________________________________________________________")
+	fmt.Printf("\n[i] Total configs: %d | Dead: %d | Alive: %d", len(results), deadCount, len(results)-deadCount)
 }
 
 func main() {
