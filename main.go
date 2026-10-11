@@ -15,11 +15,17 @@ func readInput(scanner *bufio.Scanner) string {
 		line := strings.TrimSpace(scanner.Text())
 
 		if line == "" {
-			continue
+			break
 		}
 
 		lines = append(lines, line)
 	}
+
+	if len(lines) == 0 {
+		fmt.Println("[!] Error: Why are you giving me an empty input? Provide valid configs.")
+		return ""
+	}
+
 	return strings.Join(lines, "\n")
 }
 
@@ -83,7 +89,7 @@ func main() {
 						fmt.Println("[!] Failed to fetch subscription data:", err)
 						continue
 					}
-					configs = fetched			
+					configs = fetched         
 				} else {
 					configs = append(configs, item)
 				}
